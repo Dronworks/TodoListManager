@@ -19,7 +19,7 @@
         android:background="#000000"/>
     
     <EditText
-        android:id="@+id/editNewItem"
+        android:id="@+id/edtNewItem"
         android:layout_width="match_parent"
         android:layout_height="35dp"
         android:layout_marginLeft="20dp" 
