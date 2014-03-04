@@ -3,6 +3,7 @@ package il.ac.huji.todolist;
 import java.util.ArrayList;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,6 +47,7 @@ public class ToDoAdapter extends BaseAdapter{
 			localView = inflater.inflate(android.R.layout.simple_list_item_1, parent, false); //first create a simple view cell by inflating a layout for each cell. simple_list_item_1 - the default android list item.
 		}
 		TextView name = (TextView) localView.findViewById(android.R.id.text1); //The layout had first text(from inflated local view)
+		name.setTextColor(location % 2 == 0 ? Color.RED : Color.BLUE); //Color the text according to position.
 		name.setText(names.get(location)); //set text from names.
 		return localView;
 	}

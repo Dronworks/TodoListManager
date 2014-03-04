@@ -4,5 +4,7 @@
     <string name="app_name">TodoListManager</string>
     <string name="action_settings">Settings</string>
 	<string name="addMenu">Add +</string>
+	<string name="add_task_title">New task:</string>
+	<string name="todo_list_title">Todo list:</string>
     
 </resources>

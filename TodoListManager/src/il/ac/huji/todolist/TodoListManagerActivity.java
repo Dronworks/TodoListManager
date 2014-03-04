@@ -4,13 +4,14 @@ import java.util.ArrayList;
 
 import android.os.Bundle;
 import android.app.Activity;
-import android.util.Log;
+import android.content.Context;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.EditText;
@@ -25,8 +26,6 @@ public class TodoListManagerActivity extends Activity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		strings.add("Andrey");
-		strings.add("Tal");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_todo_list_manager);
 		list = (ListView) findViewById(R.id.lstTodoItems);
@@ -47,12 +46,33 @@ public class TodoListManagerActivity extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		//What happens when we click the menu.
 		super.onOptionsItemSelected(item);
+		InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE); //To hide keyboard after addition.
+		imm.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS); //To hide keyboard.
 		if(item.getItemId() == R.id.menuItemAdd){
-			final EditText totalCost = (EditText) findViewById(R.id.editNewItem);
-			strings.add(totalCost.getText().toString());
-			ad.notifyDataSetChanged();
+			final EditText addTodo = (EditText) findViewById(R.id.editNewItem);
+			String inputText = addTodo.getText().toString();
+			if(inputText.length() != 0){
+				strings.add(addTodo.getText().toString());
+				ad.notifyDataSetChanged();
+				addTodo.setText("");
+			}
+			else{
+				Toast.makeText(this, "Task can't be empty...", Toast.LENGTH_SHORT).show();
+			}
 		}
 		return true;
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		super.onCreateContextMenu(menu, v, menuInfo);
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+		int pos = info.position;
+		String title = strings.get(pos);
+		menu.setHeaderTitle(title); //set title for delete menu.
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.context, menu);
 	}
 
 	@Override
@@ -60,26 +80,12 @@ public class TodoListManagerActivity extends Activity {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
 		int id = info.position;
 		if(item.getItemId() == R.id.menuItemDelete){
+			String itemToDelete = strings.get(id);
 			strings.remove(id);
 			ad.notifyDataSetChanged();
-			Toast.makeText(getApplicationContext(), "test " + id, Toast.LENGTH_SHORT).show();
+			Toast.makeText(getApplicationContext(), "Item: [" + itemToDelete + "] was successfully deleted!", Toast.LENGTH_SHORT).show();
 		}
 		return super.onContextItemSelected(item);
 	}
-
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v,
-			ContextMenuInfo menuInfo) {
-		// TODO Auto-generated method stub
-		super.onCreateContextMenu(menu, v, menuInfo);
-		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
-//		Log.w(TEXT_SERVICES_MANAGER_SERVICE, new Integer(info.position).toString());
-		int pos = info.position;
-		String title = strings.get(pos);
-		menu.setHeaderTitle(title);
-		MenuInflater inflater = getMenuInflater();
-		inflater.inflate(R.menu.context, menu);
-	}
-
 }
  
