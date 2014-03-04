@@ -49,7 +49,7 @@ public class TodoListManagerActivity extends Activity {
 		InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE); //To hide keyboard after addition.
 		imm.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS); //To hide keyboard.
 		if(item.getItemId() == R.id.menuItemAdd){
-			final EditText addTodo = (EditText) findViewById(R.id.editNewItem);
+			final EditText addTodo = (EditText) findViewById(R.id.edtNewItem);
 			String inputText = addTodo.getText().toString();
 			if(inputText.length() != 0){
 				strings.add(addTodo.getText().toString());

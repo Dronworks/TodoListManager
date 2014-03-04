@@ -26,7 +26,7 @@ public final class R {
         public static final int todo_image=0x7f020002;
     }
     public static final class id {
-        public static final int editNewItem=0x7f080001;
+        public static final int edtNewItem=0x7f080001;
         public static final int lstTodoItems=0x7f080002;
         public static final int menuItemAdd=0x7f080005;
         public static final int menuItemDelete=0x7f080004;
