@@ -1,0 +1,62 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/addLinearLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white" >
+
+    <TextView
+        android:id="@+id/addTodoInst"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/todoNameInst"
+        android:layout_gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:background="@android:color/holo_blue_dark" />
+
+    <EditText
+        android:id="@+id/edtNewItem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/pickADateInst"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/pickADate"
+        android:layout_gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:textSize="20sp"
+        android:background="@android:color/holo_blue_dark" />
+
+    <DatePicker
+        android:id="@+id/datePicker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:endYear="2100"
+        android:startYear="1900" />
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:text="@string/cancel" 
+            android:textColor="@android:color/holo_red_dark"
+            android:textStyle="bold"/>
+        <Button
+            android:id="@+id/btnOK"
+            android:layout_width="100dp"
+            android:layout_height="40dp"
+            android:text="@string/add"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textStyle="bold"
+            android:layout_alignParentRight="true"/>
+    </RelativeLayout>
+
+</LinearLayout>

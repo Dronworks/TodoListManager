@@ -2,8 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal" 
-    android:background="#c0c0c0">
+    android:orientation="horizontal"
+    android:longClickable="true" 
+    android:background="@drawable/on_click_selector">
     
     <CheckBox 
         android:layout_width="wrap_content"
@@ -13,19 +14,26 @@
         android:layout_marginBottom="10dp"
         android:id="@+id/toDoChecked" />
    
-    <LinearLayout
+    <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:orientation="vertical">
         
         <TextView 
+            android:id="@+id/txtTodoTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:text="@string/app_name"/>
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="18dp"/>
         
-    </LinearLayout>
-   		
-    
+        <TextView 
+            android:id="@+id/txtTodoDueDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginTop="18dp"
+            android:layout_marginRight="10dp"/>
+        
+    </RelativeLayout>
 
 </LinearLayout>
