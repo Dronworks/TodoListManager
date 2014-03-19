@@ -5,9 +5,9 @@ public class TodoTask {
 	private int month;
 	private int year;
 	private String task;
-	private long number;
+	private String number;
 	
-	public TodoTask(int d, int m, int y, String todo, long num){
+	public TodoTask(int d, int m, int y, String todo, String num){
 		day = d;
 		month = m;
 		year = y;
@@ -37,7 +37,7 @@ public class TodoTask {
 		return year;
 	}
 	
-	public long getNumber(){
+	public String getNumber(){
 		return number;
 	}
 	

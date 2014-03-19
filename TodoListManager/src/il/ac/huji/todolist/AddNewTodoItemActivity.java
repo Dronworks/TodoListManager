@@ -46,8 +46,12 @@ public class AddNewTodoItemActivity extends Activity {
 		});
 
 		cancelButon.setOnClickListener(new View.OnClickListener() {
+			
 			@Override
 			public void onClick(View arg0) {
+				EditText todoText = (EditText) findViewById(R.id.edtNewItem);
+				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE); //To hide keyboard after addition.
+				imm.hideSoftInputFromWindow(todoText.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS); //To hide keyboard.
 				finish();
 			}
 		});

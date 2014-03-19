@@ -70,7 +70,7 @@ public class TodoListManagerActivity extends Activity {
 		menu.setHeaderTitle(title); //set title for delete menu.
 
 		MenuInflater inflater = getMenuInflater();
-		if(firstWordCall(title) != -1){
+		if(!firstWordCall(title).equals("-1")){
 			inflater.inflate(R.menu.context_delete_call, menu);
 			MenuItem mi =(MenuItem) menu.findItem(R.id.menuItemCall);
 			mi.setTitle(title);
@@ -80,19 +80,19 @@ public class TodoListManagerActivity extends Activity {
 		}
 	}
 
-	private int firstWordCall(String title) {
+	private String firstWordCall(String title) {
 		String[] split = title.split(" ",2);
 		String firstWord = split[0].toLowerCase();
 		if(firstWord.equals("call")){
 			String rest = split[1];
 			rest = rest.replaceAll("\\s","");
-			if(rest.startsWith("-")) return -1;
+			if(rest.startsWith("-")) return "-1";
 			rest = rest.replaceAll("-", "");
 			if(rest.matches("^[0-9]+")){
-				return Integer.parseInt(rest);
+				return rest;
 			}
 		}
-		return -1;
+		return "-1";
 	}
 
 	@Override
@@ -117,7 +117,7 @@ public class TodoListManagerActivity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent input) {
 		// if the results is coming from BROWSER_ACTIVATION_REQUEST 
 		String newTask;
-		int number = -1;
+		String number = "-1";
 		
 		if (requestCode == BROWSER_ACTIVATION_REQUEST) {
 

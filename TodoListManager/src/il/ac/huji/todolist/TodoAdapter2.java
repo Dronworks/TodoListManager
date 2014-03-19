@@ -38,6 +38,7 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 			tempholder.task = (TextView) localView.findViewById(R.id.txtTodoTitle);
 			tempholder.date = (TextView) localView.findViewById(R.id.txtTodoDueDate);
 			tempholder.status = (CheckBox) localView.findViewById(R.id.toDoChecked);
+			tempholder.stat = false;
 			localView.setTag(tempholder);
 		}
 		else
@@ -52,6 +53,9 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 			@Override
 			public void onClick(View v) {
 				changeColorOnCheckBox(holder, status, currentTask);
+				if(status.isChecked())
+					holder.stat = true;
+				else holder.stat = false;
 			}
 		});
 		if(!holder.status.isChecked()){
@@ -67,6 +71,7 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 
 		holder.task.setText(currentTask.getTask());
 		holder.date.setText(currentTask.toStringDate());
+		holder.status.setChecked(holder.stat);
 		return localView;
 	}
 
@@ -100,5 +105,6 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 		CheckBox status;
 		TextView task;
 		TextView date;
+		boolean stat;
 	}
 }
