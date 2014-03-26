@@ -6,13 +6,19 @@ public class TodoTask {
 	private int year;
 	private String task;
 	private String number;
+	private boolean checked;
+	private long rowId;
+	private String onlineID;
 	
-	public TodoTask(int d, int m, int y, String todo, String num){
+	public TodoTask(int d, int m, int y, String todo, String num, boolean chk, long rID, String oid){
 		day = d;
 		month = m;
 		year = y;
 		task = todo;
-		number = num;		
+		number = num;
+		checked = chk;
+		rowId = rID;
+		onlineID = oid;
 	}
 	
 	public String toStringDate(){
@@ -41,4 +47,21 @@ public class TodoTask {
 		return number;
 	}
 	
+	
+	public boolean isChecked(){
+		return checked;
+	}
+	
+	public void setChecked(boolean chk){
+		checked = chk;
+	}
+	
+	public long getRowId(){
+		return rowId;
+	}
+	
+	public String getOnlineID(){
+		return onlineID;
+	}
 }
+

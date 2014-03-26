@@ -5,7 +5,10 @@ import java.util.Calendar;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +33,7 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 	public View getView(int position, View convertView, ViewGroup parent) {
 		View localView = convertView;
 		todoHolder tempholder = new todoHolder();
-
+		
 		if(localView == null)
 		{
 			LayoutInflater inflater = ((Activity)context).getLayoutInflater();
@@ -38,7 +41,6 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 			tempholder.task = (TextView) localView.findViewById(R.id.txtTodoTitle);
 			tempholder.date = (TextView) localView.findViewById(R.id.txtTodoDueDate);
 			tempholder.status = (CheckBox) localView.findViewById(R.id.toDoChecked);
-			tempholder.stat = false;
 			localView.setTag(tempholder);
 		}
 		else
@@ -49,15 +51,23 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 
 		final TodoTask currentTask = data.get(position);
 		final CheckBox status = (CheckBox) holder.status;
+		
+		status.setChecked(currentTask.isChecked());
 		status.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				changeColorOnCheckBox(holder, status, currentTask);
-				if(status.isChecked())
-					holder.stat = true;
-				else holder.stat = false;
+				if(status.isChecked()){
+					Log.w("----------", "CheckboxT");
+					currentTask.setChecked(true);
+				}
+				else{
+					Log.w("----------", "CheckboxF");
+					currentTask.setChecked(false);
+				}
 			}
 		});
+		
 		if(!holder.status.isChecked()){
 			if(isOverdue(currentTask)){
 				holder.task.setTextColor(Color.RED);
@@ -68,10 +78,8 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 				holder.date.setTextColor(Color.BLACK);
 			}
 		}
-
 		holder.task.setText(currentTask.getTask());
 		holder.date.setText(currentTask.toStringDate());
-		holder.status.setChecked(holder.stat);
 		return localView;
 	}
 
@@ -105,6 +113,8 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 		CheckBox status;
 		TextView task;
 		TextView date;
-		boolean stat;
+		public String toString(){
+			return status.toString() + task.toString() + date.toString();
+		}
 	}
 }

@@ -20,16 +20,18 @@ public class AddNewTodoItemActivity extends Activity {
 		setContentView(R.layout.activity_add_new_todo_item);
 		setTitle("Add New Item");
 		Button okButton = (Button) findViewById(R.id.btnOK);
-		Button cancelButon = (Button) findViewById(R.id.btnCancel);
 
+		Button cancelButon = (Button) findViewById(R.id.btnCancel);
 		okButton.setOnClickListener(new View.OnClickListener() {
 
 			@Override
 			public void onClick(View v) {
 				EditText todoText = (EditText) findViewById(R.id.edtNewItem);
 				DatePicker date = (DatePicker) findViewById(R.id.datePicker);
+				
 				InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE); //To hide keyboard after addition.
 				imm.hideSoftInputFromWindow(todoText.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS); //To hide keyboard.
+														
 				if(!todoText.getText().toString().equals("")){
 					Intent res = new Intent();
 					res.putExtra("Task", todoText.getText().toString());
@@ -63,5 +65,4 @@ public class AddNewTodoItemActivity extends Activity {
 		getMenuInflater().inflate(R.menu.add_new_todo_item, menu);
 		return true;
 	}
-
 }
