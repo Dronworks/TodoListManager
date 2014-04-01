@@ -5,11 +5,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings.Secure;
 import android.app.Activity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -23,35 +25,44 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
 import com.parse.Parse;
+import com.parse.ParseACL;
 import com.parse.ParseAnalytics;
+import com.parse.ParseAnonymousUtils;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
+import com.parse.ParseUser;
 import com.parse.SaveCallback;
 
 public class TodoListManagerActivity extends Activity {
-	private ArrayList<TodoTask> tasks;
 	private ListView list;
-	private TodoAdapter2 ad;
+	private TodoCursorAdapter ad;
 	private TodoDBAdapter db;
-	
+	private String selectedTaskName;
+	private Long selectedTaskDue;
+	private ParseACL aclObj;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_todo_list_manager);
 		Parse.initialize(this, "iPbCD2Q2ZPb7GZCC1sXz5Y91LQkouFdVIgtlOWSP", "FQvWBYu5b8E6WCep7Wj0UnBMhYm2P557bMwVxz2k");
-		tasks = new ArrayList<TodoTask>();
-//		this.deleteDatabase(TodoConstants.DATABASE_NAME);
-		db = new TodoDBAdapter(this);
+//		String android_id = Secure.getString(getBaseContext().getContentResolver(), Secure.ANDROID_ID);
+//		Log.w("--", android_id);
 		
-		getAllDBRecords();
+//		us.setUsername(android_id);
+//		aclObj = new ParseACL(us);
+//		Log.w("--",aclObj.toString());
+//				this.deleteDatabase(TodoConstants.DATABASE_NAME);
+		db = new TodoDBAdapter(this);
+		db.open();
 
 		list = (ListView) findViewById(R.id.lstTodoItems);
-		ad = new TodoAdapter2(this, R.layout.todoline_layout, tasks);
+		ad = new TodoCursorAdapter(getApplicationContext(), getAllDBRecords(), true, db);
 		list.setAdapter(ad);
 		registerForContextMenu(list);
 	}
@@ -76,6 +87,7 @@ public class TodoListManagerActivity extends Activity {
 			Toast.makeText(getApplicationContext(), "Made by Andrey Dobrikov", Toast.LENGTH_SHORT).show();
 		}
 		if(item.getItemId() == R.id.exitMenu){
+			db.close();
 			finish();
 		}
 		return true;
@@ -86,16 +98,16 @@ public class TodoListManagerActivity extends Activity {
 			ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
-		int pos = info.position;
-		TodoTask curTask = tasks.get(pos);
-		String title = curTask.getTask();
-		menu.setHeaderTitle(title); //set title for delete menu.
-
+		Long id = info.id;
+		Cursor curs = db.getRecord(id);
+		selectedTaskName = curs.getString(curs.getColumnIndex(TodoConstants.COLUMN_TITLE));
+		selectedTaskDue = curs.getLong(curs.getColumnIndex(TodoConstants.COLUMN_DUE));
+		menu.setHeaderTitle(selectedTaskName); //set title for delete menu.
 		MenuInflater inflater = getMenuInflater();
-		if(!firstWordCall(title).equals("-1")){
+		if(!firstWordCall(selectedTaskName).equals("-1")){
 			inflater.inflate(R.menu.context_delete_call, menu);
 			MenuItem mi =(MenuItem) menu.findItem(R.id.menuItemCall);
-			mi.setTitle(title);
+			mi.setTitle(selectedTaskName);
 		}
 		else{
 			inflater.inflate(R.menu.context_delete, menu);
@@ -105,23 +117,16 @@ public class TodoListManagerActivity extends Activity {
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-		int taskPos = info.position;
-		TodoTask currentTask = tasks.get(taskPos);
 		if(item.getItemId() == R.id.menuItemDelete){
-			String itemToDelete = currentTask.getTask();
-			long rowId = currentTask.getRowId();
-			Log.w("HEWHWHEHE", "SDFSDF");
-			String onlineRowID = currentTask.getOnlineID();
-			Log.w("ROW ID", onlineRowID);
-			tasks.remove(taskPos);
-			removeTodoTask(rowId);
-			removeOnlineTodoTask(onlineRowID);
-			ad.notifyDataSetChanged();
-			Toast.makeText(getApplicationContext(), "Item: [" + itemToDelete + "] was successfully deleted!", Toast.LENGTH_SHORT).show();
+			removeTodoTask(info.id);
+			removeOnlineTodoTask(selectedTaskName, selectedTaskDue);
+			Toast.makeText(getApplicationContext(), "Item: [" + selectedTaskName + "] was successfully deleted!", Toast.LENGTH_SHORT).show();
 		}
 		if(item.getItemId() == R.id.menuItemCall){
 			Intent callIntent = new Intent(Intent.ACTION_CALL);
-			callIntent.setData(Uri.parse("tel:" + currentTask.getNumber()));
+			String callNumber = firstWordCall(selectedTaskName);
+			Log.w("CALL NUM:", callNumber);
+			callIntent.setData(Uri.parse("tel:" + callNumber));
 			startActivity(callIntent);
 		}
 		return super.onContextItemSelected(item);
@@ -131,7 +136,6 @@ public class TodoListManagerActivity extends Activity {
 	protected void onActivityResult(int requestCode, int resultCode, Intent input) {
 		// if the results is coming from BROWSER_ACTIVATION_REQUEST 
 		String newTask;
-		String number = "-1";
 
 		if (requestCode == TodoConstants.BROWSER_ACTIVATION_REQUEST) {
 
@@ -150,25 +154,17 @@ public class TodoListManagerActivity extends Activity {
 					} catch (ParseException e) {
 						e.printStackTrace();
 					}
-					long milliseconds = d.getTime();
+					long dateInMilliseconds = d.getTime();
 
-					String s = "";
-					s+= milliseconds;// TODO change names
-
-					if(newTask.toLowerCase().contains("call")){
-						number = firstWordCall(newTask);
-					}
-					String onlineID = addOnlineTodoTask(newTask, milliseconds);
-					long id = addTodoTask(newTask, milliseconds, onlineID);
-					TodoTask todoLine = new TodoTask(day, month, year, newTask, number, false, id, onlineID);
-					tasks.add(todoLine);
+					addOnlineTodoTask(newTask, dateInMilliseconds);
+					addTodoTask(newTask, dateInMilliseconds);
 					ad.notifyDataSetChanged();
 				}
 			}
 		}
 	}
 
-//==============================================TOOLS FUNCTIONS===========================================
+	//==============================================TOOLS FUNCTIONS===========================================
 	private String firstWordCall(String title) {
 		String[] split = title.split(" ",2);
 		String firstWord = split[0].toLowerCase();
@@ -184,114 +180,86 @@ public class TodoListManagerActivity extends Activity {
 		return "-1";
 	}
 
-//==============================================DATABASE FUNCTIONS===========================================	
-	private long addTodoTask(String task, long due, String oid){
-		db.open();
+	//==============================================DATABASE FUNCTIONS===========================================	
+	private long addTodoTask(String task, long due){
+		//		db.open();
 		Log.w("=============",task);
-		long id = db.insertRecord(task, due, oid);
+		long id = db.insertRecord(task, due, 0);
+		ad.changeCursor(getAllDBRecords());
 		if(id < 0){
 			Log.e(TodoConstants.DBERROR, "Could not add new task to the database");
-			db.close();
+			//			db.close();
 			return -1;
 		}
 		else{
-			db.close();
+			//			db.close();
 			return id;
 		}
 	}
-	
+
 	private void removeTodoTask(long rowId){
-		db.open();
+		//		db.open();
 		boolean isDeleted = db.deleteRecord(rowId);
 		if(!isDeleted) Log.e(TodoConstants.DBERROR, "Could not remove task from the database");
-		db.close();
-	}
-	
-	private void getAllDBRecords(){
-		db.open();
-		Cursor curs = db.getAllRecords();
-		if(curs.moveToFirst()){
-			do{
-				long id = curs.getLong(curs.getColumnIndex(TodoConstants.COLUMN_ID));
-				long date = curs.getLong(curs.getColumnIndex(TodoConstants.COLUMN_DUE));
-				String onlineID = curs.getString(curs.getColumnIndex(TodoConstants.COLUMN_ONLINE_ID));
-				String[] taskDue = getDateFromLong(date);
-				String title = curs.getString(curs.getColumnIndex(TodoConstants.COLUMN_TITLE));
-				Log.w("-------", title);
-				String num = firstWordCall(title);
-				tasks.add(new TodoTask(Integer.valueOf(taskDue[0]), Integer.valueOf(taskDue[1]), Integer.valueOf(taskDue[2]), title, num, false, id, onlineID));
-			}while(curs.moveToNext());
-		}
-		db.close();
+		ad.changeCursor(getAllDBRecords());
+		//		db.close();
 	}
 
-	private String[] getDateFromLong(long date) {
-		Date dt = new Date(date);
-		SimpleDateFormat f = new SimpleDateFormat("dd-mm-yyyy", Locale.getDefault());
-		String s = f.format(dt);
-		String[] retDate =  s.split("-");
-		return retDate;
+	private Cursor getAllDBRecords(){
+		//		db.open();
+		Cursor curs = db.getAllRecords();
+		//		db.close();
+		return curs;
 	}
-	
-//======================================ONLINE DATABASE FUNCTIONS===========================================
-	
-	private String addOnlineTodoTask(String task, long due){
+
+	//======================================ONLINE DATABASE FUNCTIONS===========================================
+
+	private void addOnlineTodoTask(String task, long due){
 		final ParseObject onlineDBObject = new ParseObject(TodoConstants.ONLINE_DATABASE_NAME);
 		onlineDBObject.put(TodoConstants.ONLINE_DB_COLUMN_TITLE, task);
 		Date d = new Date(due);  
 		SimpleDateFormat f = new SimpleDateFormat("dd-mm-yyyy", Locale.getDefault());
 		String s = f.format(d);
+//		onlineDBObject.setACL(aclObj);
 		onlineDBObject.put(TodoConstants.ONLINE_DB_COLUMN_DUE, s);
 		onlineDBObject.saveInBackground();
+	}
 
-		String retval = "";
-		try {
-			onlineDBObject.save();
-			retval = onlineDBObject.getObjectId();
-		} catch (com.parse.ParseException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-//	    onlineDBObject.saveInBackground(new SaveCallback() {
-//	    	@Override
-//	    	public void done(com.parse.ParseException e) {
-//	            if (e == null) {
-//	                // Saved successfully.
-//	                Log.d(TodoConstants.ONLNE_DB_MESSAGE, "User update saved!");
-//	                String id = onlineDBObject.getObjectId();
-//	                thisId.id = id;
-//	                Log.d(TodoConstants.ONLNE_DB_MESSAGE, "The object id is: " + id);
-//	            } else {
-//	                // The save failed.
-//	                Log.d(TodoConstants.ONLNE_DB_MESSAGE, "User update error: " + e);
-//	            }
-//	        }
-//
-//	    });
-		
-		return retval;
-	}
-	
-	private void removeOnlineTodoTask(String rowID){
-		Log.w(TodoConstants.ONLNE_DB_MESSAGE, rowID);
-		ParseObject.createWithoutData(TodoConstants.ONLINE_DATABASE_NAME, rowID).deleteEventually();
-	}
-	
-	private void getAllOnlineDBRecords(){
+	private void removeOnlineTodoTask(String title, final Long due){
 		ParseQuery<ParseObject> query = ParseQuery.getQuery(TodoConstants.ONLINE_DATABASE_NAME);
-		
+		query.whereEqualTo(TodoConstants.COLUMN_TITLE, title);
 		query.findInBackground(new FindCallback<ParseObject>() {
-		     
-			 @Override
-			 public void done(List<ParseObject> objects, com.parse.ParseException e) {
-		         if (e == null) {
-		        	 //TODO ???
-		         } else {
-		        	 //TODO ???
-		         }
-		     }
-		 });
+
+			@Override
+			public void done(List<ParseObject> resultList, com.parse.ParseException findException) {
+				Iterator<ParseObject> iter = resultList.iterator();
+				while(iter.hasNext()){
+					ParseObject toDelete = iter.next();
+					String dueToTest = toDelete.getString(TodoConstants.ONLINE_DB_COLUMN_DUE);
+					SimpleDateFormat f = new SimpleDateFormat("dd-mm-yyyy", Locale.getDefault());
+					Date d = new Date();
+					try {
+						d = f.parse(dueToTest);
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+					long dateInMilliseconds = d.getTime();
+					if(dateInMilliseconds == due){
+						try {
+							toDelete.delete();
+						} catch (com.parse.ParseException e) {
+							e.printStackTrace();
+						}
+						return;
+					}
+				}
+			}
+		});
 	}
- 
+
+	@Override
+	protected void onDestroy() {
+		db.close();
+		super.onStop();
+	}
 }
