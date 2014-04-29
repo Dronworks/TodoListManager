@@ -40,11 +40,13 @@ import com.parse.SaveCallback;
 
 public class TodoListManagerActivity extends Activity {
 	private ListView list;
-	private TodoCursorAdapter ad;
+	private TodoAdapter2 ad;
 	private TodoDBAdapter db;
+	TodoAsyncLoader loader;
 	private String selectedTaskName;
 	private Long selectedTaskDue;
-	private ParseACL aclObj;
+	private ArrayList<TodoTask> data;
+//	private ParseACL aclObj;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -60,10 +62,15 @@ public class TodoListManagerActivity extends Activity {
 //				this.deleteDatabase(TodoConstants.DATABASE_NAME);
 		db = new TodoDBAdapter(this);
 		db.open();
+		
+		data = new ArrayList<TodoTask>();
 
 		list = (ListView) findViewById(R.id.lstTodoItems);
-		ad = new TodoCursorAdapter(getApplicationContext(), getAllDBRecords(), true, db);
+		ad = new TodoAdapter2(this, R.layout.todoline_layout, data, db);
 		list.setAdapter(ad);
+		loader = new TodoAsyncLoader(db, ad);
+		loader.execute();
+		
 		registerForContextMenu(list);
 	}
 
@@ -118,6 +125,8 @@ public class TodoListManagerActivity extends Activity {
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
 		if(item.getItemId() == R.id.menuItemDelete){
+			data.remove(info.id);
+			ad.notifyDataSetChanged();
 			removeTodoTask(info.id);
 			removeOnlineTodoTask(selectedTaskName, selectedTaskDue);
 			Toast.makeText(getApplicationContext(), "Item: [" + selectedTaskName + "] was successfully deleted!", Toast.LENGTH_SHORT).show();
@@ -157,7 +166,9 @@ public class TodoListManagerActivity extends Activity {
 					long dateInMilliseconds = d.getTime();
 
 					addOnlineTodoTask(newTask, dateInMilliseconds);
-					addTodoTask(newTask, dateInMilliseconds);
+					long id = addTodoTask(newTask, dateInMilliseconds);
+					TodoTask task = new TodoTask(day, month, year, newTask, false, id);
+					data.add(task);
 					ad.notifyDataSetChanged();
 				}
 			}
@@ -185,7 +196,6 @@ public class TodoListManagerActivity extends Activity {
 		//		db.open();
 		Log.w("=============",task);
 		long id = db.insertRecord(task, due, 0);
-		ad.changeCursor(getAllDBRecords());
 		if(id < 0){
 			Log.e(TodoConstants.DBERROR, "Could not add new task to the database");
 			//			db.close();
@@ -201,7 +211,6 @@ public class TodoListManagerActivity extends Activity {
 		//		db.open();
 		boolean isDeleted = db.deleteRecord(rowId);
 		if(!isDeleted) Log.e(TodoConstants.DBERROR, "Could not remove task from the database");
-		ad.changeCursor(getAllDBRecords());
 		//		db.close();
 	}
 

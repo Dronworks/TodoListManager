@@ -1,7 +1,11 @@
 package il.ac.huji.todolist;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 import android.app.Activity;
 import android.content.Context;
@@ -21,12 +25,14 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 	Context context; 
 	int layoutResourceId;    
 	ArrayList<TodoTask> data = null;
+	TodoDBAdapter thisDB;
 
-	public TodoAdapter2(Context context, int layoutResourceId, ArrayList<TodoTask> data) {
+	public TodoAdapter2(Context context, int layoutResourceId, ArrayList<TodoTask> data, TodoDBAdapter db) {
 		super(context, layoutResourceId, data);
 		this.layoutResourceId = layoutResourceId;
 		this.context = context;
 		this.data = data;
+		thisDB = db;
 	}
 
 	@Override
@@ -56,14 +62,27 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 		status.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				String date1 = currentTask.getDay() + "-" + currentTask.getMonth() + "-" + currentTask.getYear();
+				SimpleDateFormat f = new SimpleDateFormat("dd-mm-yyyy", Locale.getDefault());
+				Date d = new Date();
+				try {
+					d = f.parse(date1);
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}
+				long dateInMilliseconds = d.getTime();
+				
+				
 				changeColorOnCheckBox(holder, status, currentTask);
 				if(status.isChecked()){
 					Log.w("----------", "CheckboxT");
 					currentTask.setChecked(true);
+					thisDB.updateRecord(currentTask.getRowID(), currentTask.getTask(), dateInMilliseconds, 1);
 				}
 				else{
 					Log.w("----------", "CheckboxF");
 					currentTask.setChecked(false);
+					thisDB.updateRecord(currentTask.getRowID(), currentTask.getTask(), dateInMilliseconds, 0);
 				}
 			}
 		});
@@ -77,6 +96,10 @@ public class TodoAdapter2 extends ArrayAdapter<TodoTask>{
 				holder.task.setTextColor(Color.BLACK);
 				holder.date.setTextColor(Color.BLACK);
 			}
+		}
+		else{
+			holder.task.setTextColor(Color.GREEN);
+			holder.date.setTextColor(Color.GREEN);
 		}
 		holder.task.setText(currentTask.getTask());
 		holder.date.setText(currentTask.toStringDate());
